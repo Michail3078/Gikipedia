@@ -1,2 +1,2 @@
 # Giki
-wiki fandom for a lot of games from around the world
+Nu tipo ssilka na [dosku](https://trello.com/b/9CpNrciF)

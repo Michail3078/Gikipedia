@@ -22,9 +22,56 @@ ___
 ![photo](https://avatars.mds.yandex.net/get-mpic/16138826/2a00000198185e5c4e0d4a7f0195ef5b3d75/orig)
 
 ___
+___
 
-## 1. Клонируйте репозиторий
-```bash
+#Installation
+### Инструкция для запуска на windows (с виртуальным окружением)
+
+#### 1. Клонирование / копирование проекта
+
+Если проект уже есть на рабочем столе, этот шаг можно пропустить.  
+Если используете GitHub:
+
+```powershell
 git clone https://github.com/yourname/gikipedia.git
 cd gikipedia
 ```
+
+#### 2. Создание и активация виртуального окружения
+
+```powershell
+
+# создать виртуальное окружение (папка venv появится в корне проекта)
+python -m venv venv
+
+# активировать окружение
+.\venv\Scripts\Activate.ps1
+```
+
+При успешной активации в начале строки PowerShell появится префикс `(venv)`.
+
+#### 3. Установка зависимостей
+
+```powershell
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+#### 4. Запуск приложения
+
+Запуск основного Flask‑приложения:
+
+```powershell
+python __init__.py
+```
+
+По умолчанию сервер стартует на:
+
+- `http://127.0.0.1:5000/` — веб‑интерфейс
+- `http://127.0.0.1:5000/api/...` — REST API
+
+#### 5. Остановка приложения
+
+В окне PowerShell нажмите `Ctrl + C`.
+
+---

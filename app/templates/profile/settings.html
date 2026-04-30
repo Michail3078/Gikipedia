@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Настройки — Gikipedia{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>Настройки профиля</h1>
+    {% if error %}<p class="flash flash-error">{{ error }}</p>{% endif %}
+    {% if success %}<p class="flash flash-success">{{ success }}</p>{% endif %}
+
+    <form method="post" class="auth-form">
+        <label for="bio">О себе</label>
+        <textarea id="bio" name="bio" rows="4" placeholder="Расскажите о себе...">{{ user['bio'] or '' }}</textarea>
+
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{% if article %}Редактировать{% else %}Новая статья{% endif %} — Gikipedia{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>{% if article %}Редактировать статью{% else %}Новая статья{% endif %}</h1>
+    {% if error %}<p class="flash flash-error">{{ error }}</p>{% endif %}
+
+    <form method="post" class="article-form">
+        <label for="title">Название</label>
+        <input id="title" type="text" name="title" required
+               value="{{ article['title'] if article else '' }}" placeholder="Название игры или темы">
+
+        <label for="body">Содержание</label>
+        <textarea id="body" name="body" rows="16" required
+                  placeholder="Расскажите об игре...">{{ article['body'] if article else '' }}</textarea>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a href="{{ url_for('articles.list_articles') }}" class="btn btn-ghost">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

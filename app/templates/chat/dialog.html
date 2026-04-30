@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Чат с {{ other['username'] }} — Gikipedia{% endblock %}
+
+{% block content %}
+<div class="chat-page">
+    <div class="chat-header">
+        <a href="{{ url_for('chat.index') }}" class="btn btn-ghost">← Назад</a>
+        <h2>{{ other['username'] }}</h2>
+    </div>
+
+    <div class="chat-messages" id="chat-messages">
+        {% for m in messages %}
+        <div class="message {% if m['from_id'] == session['user_id'] %}message-own{% endif %}">
+            <span class="message-sender">{{ m['sender_name'] }}</span>
+            <p class="message-text">{{ m['text'] }}</p>
+            <span class="message-time">{{ m['created_at'][11:16] }}</span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <form method="post" class="chat-form">
+        <input type="text" name="text" class="chat-input" placeholder="Сообщение..." required autocomplete="off" autofocus>
+        <button type="submit" class="btn btn-primary">Отправить</button>
+    </form>
+</div>
+{% endblock %}

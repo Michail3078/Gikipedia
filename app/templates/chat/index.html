@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Чат — Gikipedia{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>Чат</h1>
+    {% if contacts %}
+    <ul class="contact-list">
+        {% for c in contacts %}
+        <li>
+            <a href="{{ url_for('chat.dialog', user_id=c['id']) }}" class="contact-item">
+                <img src="{{ c['avatar'] or '' }}" alt="{{ c['username'] }}"
+                     onerror="this.src='https://ui-avatars.com/api/?name={{ c['username'] }}&background=7c5cfc&color=fff&size=40'">
+                <span>{{ c['username'] }}</span>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-muted">Диалогов пока нет. Напишите кому-нибудь через их профиль.</p>
+    {% endif %}
+</div>
+{% endblock %}

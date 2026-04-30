@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Уведомления — Gikipedia{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>Уведомления</h1>
+    {% if notifications %}
+    <ul class="notif-list">
+        {% for n in notifications %}
+        <li class="notif-item {% if not n['is_read'] %}notif-unread{% endif %}">
+            <div class="notif-body">
+                <p>{{ n['text'] }}</p>
+                {% if n['link'] %}
+                    <a href="{{ n['link'] }}" class="btn btn-ghost" style="padding:4px 12px;margin-top:6px">Перейти</a>
+                {% endif %}
+            </div>
+            <div class="notif-right">
+                <span class="text-muted notif-time">{{ n['created_at'][:16] }}</span>
+                <form method="post" action="{{ url_for('notif.delete', notif_id=n['id']) }}">
+                    <button class="btn-icon-close" title="Удалить уведомление" aria-label="Удалить">✕</button>
+                </form>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-muted">Уведомлений нет.</p>
+    {% endif %}
+</div>
+{% endblock %}

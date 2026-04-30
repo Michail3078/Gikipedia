@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}{{ profile_user['username'] }} — Gikipedia{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+    <div class="profile-header">
+        <img class="profile-avatar"
+             src="{{ profile_user['avatar'] or '' }}"
+             alt="{{ profile_user['username'] }}"
+             onerror="this.src='https://ui-avatars.com/api/?name={{ profile_user['username'] }}&background=7c5cfc&color=fff&size=96'">
+        <div class="profile-info">
+            <h1>{{ profile_user['username'] }}</h1>
+            <span class="role-badge role-{{ profile_user['role'] }}">{{ profile_user['role'] }}</span>
+            {% if profile_user['bio'] %}<p class="profile-bio">{{ profile_user['bio'] }}</p>{% endif %}
+        </div>
+
+        <div class="profile-actions">
+            {% if current_user %}
+                {% if current_user['id'] == profile_user['id'] %}
+                    {# Свой профиль #}
+                    <a href="{{ url_for('profile.settings') }}" class="btn btn-ghost">Настройки</a>
+                    <a href="{{ url_for('friends.index') }}" class="btn btn-ghost">Друзья</a>
+                {% else %}
+                    {# Чужой профиль — кнопки дружбы #}
+                    {% if friendship %}
+                        {% if friendship['status'] == 'accepted' %}
+                            <a href="{{ url_for('chat.dialog', user_id=profile_user['id']) }}" class="btn btn-primary">Написать</a>
+                            <form method="post" action="{{ url_for('friends.remove', user_id=profile_user['id']) }}">
+                                <button class="btn btn-ghost">Удалить из друзей</button>
+                            </form>
+                        {% elif friendship['status'] == 'pending' and friendship['to_id'] == current_user['id'] %}
+                            <form method="post" action="{{ url_for('friends.accept', friendship_id=friendship['id']) }}">
+                                <button class="btn btn-primary">Принять заявку</button>
+                            </form>
+                            <form method="post" action="{{ url_for('friends.decline', friendship_id=friendship['id']) }}">
+                                <button class="btn btn-ghost">Отклонить</button>
+                            </form>
+                        {% else %}
+                            <button class="btn btn-ghost" disabled>Заявка отправлена</button>
+                        {% endif %}
+                    {% else %}
+                        <form method="post" action="{{ url_for('friends.send_request', to_id=profile_user['id']) }}">
+                            <button class="btn btn-primary">+ Добавить в друзья</button>
+                        </form>
+                    {% endif %}
+                    <button class="btn btn-ghost" onclick="document.getElementById('report-user-form').toggleAttribute('hidden')">Пожаловаться</button>
+                {% endif %}
+            {% endif %}
+        </div>
+        <div id="report-user-form" class="report-inline" hidden>
+            <form method="post" action="{{ url_for('reports.report_user', user_id=profile_user['id']) }}" class="report-form">
+                <textarea name="reason" placeholder="Опишите причину жалобы..." rows="3" required maxlength="200" class="report-textarea"></textarea>
+                <div class="report-counter"><span class="report-chars">0</span>/200</div>
+                <button type="submit" class="btn btn-danger">Отправить жалобу</button>
+            </form>
+        </div>
+    </div>
+
+    <h2>Статьи ({{ articles|length }})</h2>
+    {% if articles %}
+    <div class="article-list">
+        {% for a in articles %}
+        <a href="{{ url_for('articles.view', slug=a['slug']) }}" class="article-card">
+            <h3>{{ a['title'] }}</h3>
+            <p class="article-meta">{{ a['created_at'][:10] }}</p>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">Статей пока нет.</p>
+    {% endif %}
+</div>
+{% endblock %}

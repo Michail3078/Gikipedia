@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Gikipedia — Энциклопедия видеоигр{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Добро пожаловать в Gikipedia</h1>
+    <p>Открытая энциклопедия видеоигр — для игроков, разработчиков и энтузиастов.</p>
+    <div class="hero-actions">
+        <a href="{{ url_for('main.search') }}" class="btn btn-primary">Найти игру</a>
+        <a href="{{ url_for('articles.new') }}" class="btn btn-ghost">Написать статью</a>
+    </div>
+</section>
+
+{% if recent %}
+<section class="recent-articles">
+    <h2>Последние статьи</h2>
+    <div class="article-grid">
+        {% for a in recent %}
+        <a href="{{ url_for('articles.view', slug=a['slug']) }}" class="article-card">
+            <h3>{{ a['title'] }}</h3>
+            <p class="article-meta">{{ a['username'] }} · {{ a['created_at'][:10] }}</p>
+            <p class="article-excerpt">{{ a['body'][:120] }}{% if a['body']|length > 120 %}…{% endif %}</p>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}

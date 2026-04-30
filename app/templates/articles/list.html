@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Все статьи — Gikipedia{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>Все статьи</h1>
+        <a href="{{ url_for('articles.new') }}" class="btn btn-primary">+ Новая статья</a>
+    </div>
+
+    {% if articles %}
+    <div class="article-list">
+        {% for a in articles %}
+        <a href="{{ url_for('articles.view', slug=a['slug']) }}" class="article-card">
+            <h3>{{ a['title'] }}</h3>
+            <p class="article-meta">{{ a['username'] }} · {{ a['created_at'][:10] }}</p>
+            <p class="article-excerpt">{{ a['body'][:150] }}{% if a['body']|length > 150 %}…{% endif %}</p>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">Статей пока нет. <a href="{{ url_for('articles.new') }}">Создайте первую!</a></p>
+    {% endif %}
+</div>
+{% endblock %}

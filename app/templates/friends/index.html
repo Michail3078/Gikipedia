@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Друзья — Gikipedia{% endblock %}
+
+{% block content %}
+<div class="page-container">
+
+    {% if incoming %}
+    <section class="friends-section">
+        <h2>Входящие заявки <span class="badge-count">{{ incoming|length }}</span></h2>
+        <ul class="friends-list">
+            {% for f in incoming %}
+            <li class="friend-item">
+                <a href="{{ url_for('profile.view', username=f['username']) }}" class="friend-info">
+                    <img src="" alt="{{ f['username'] }}"
+                         onerror="this.src='https://ui-avatars.com/api/?name={{ f['username'] }}&background=7c5cfc&color=fff&size=40'">
+                    <span>{{ f['username'] }}</span>
+                </a>
+                <div class="friend-item-actions">
+                    <form method="post" action="{{ url_for('friends.accept', friendship_id=f['id']) }}">
+                        <button class="btn btn-primary" style="padding:5px 12px">Принять</button>
+                    </form>
+                    <form method="post" action="{{ url_for('friends.decline', friendship_id=f['id']) }}">
+                        <button class="btn btn-ghost" style="padding:5px 12px">Отклонить</button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endif %}
+
+    <section class="friends-section">
+        <h1>Друзья <span class="badge-count">{{ friends|length }}</span></h1>
+        {% if friends %}
+        <ul class="friends-list">
+            {% for f in friends %}
+            <li class="friend-item">
+                <a href="{{ url_for('profile.view', username=f['username']) }}" class="friend-info">
+                    <img src="" alt="{{ f['username'] }}"
+                         onerror="this.src='https://ui-avatars.com/api/?name={{ f['username'] }}&background=7c5cfc&color=fff&size=40'">
+                    <span>{{ f['username'] }}</span>
+                    <span class="role-badge role-{{ f['role'] }}">{{ f['role'] }}</span>
+                </a>
+                <div class="friend-item-actions">
+                    <a href="{{ url_for('chat.dialog', user_id=f['id']) }}" class="btn btn-primary" style="padding:5px 12px">Написать</a>
+                    <form method="post" action="{{ url_for('friends.remove', user_id=f['id']) }}"
+                          onsubmit="return confirm('Удалить из друзей?')">
+                        <button class="btn btn-ghost" style="padding:5px 12px">Удалить</button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">Друзей пока нет. Найдите пользователей через поиск.</p>
+        {% endif %}
+    </section>
+
+    {% if outgoing %}
+    <section class="friends-section">
+        <h2>Исходящие заявки</h2>
+        <ul class="friends-list">
+            {% for f in outgoing %}
+            <li class="friend-item">
+                <a href="{{ url_for('profile.view', username=f['username']) }}" class="friend-info">
+                    <img src="" alt="{{ f['username'] }}"
+                         onerror="this.src='https://ui-avatars.com/api/?name={{ f['username'] }}&background=7c5cfc&color=fff&size=40'">
+                    <span>{{ f['username'] }}</span>
+                </a>
+                <div class="friend-item-actions">
+                    <form method="post" action="{{ url_for('friends.decline', friendship_id=f['id']) }}">
+                        <button class="btn btn-ghost" style="padding:5px 12px">Отменить</button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endif %}
+
+</div>
+{% endblock %}

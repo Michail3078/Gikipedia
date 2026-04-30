@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Поиск: {{ q }} — Gikipedia{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <h1>Поиск{% if q %}: <span class="accent">{{ q }}</span>{% endif %}</h1>
+
+    {% if q %}
+        {% if users %}
+        <section class="search-section">
+            <h2>Пользователи</h2>
+            <div class="user-list">
+                {% for u in users %}
+                <a href="{{ url_for('profile.view', username=u['username']) }}" class="user-card">
+                    <img src=""
+                         alt="{{ u['username'] }}"
+                         onerror="this.src='https://ui-avatars.com/api/?name={{ u['username'] }}&background=7c5cfc&color=fff&size=40'">
+                    <div>
+                        <span class="user-card-name">{{ u['username'] }}</span>
+                        <span class="role-badge role-{{ u['role'] }}">{{ u['role'] }}</span>
+                        {% if u['bio'] %}<p class="user-card-bio">{{ u['bio'][:80] }}</p>{% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        {% if results %}
+        <section class="search-section">
+            <h2>Статьи</h2>
+            <div class="article-list">
+                {% for a in results %}
+                <a href="{{ url_for('articles.view', slug=a['slug']) }}" class="article-card">
+                    <h3>{{ a['title'] }}</h3>
+                    <p class="article-excerpt">{{ a['body'][:150] }}{% if a['body']|length > 150 %}…{% endif %}</p>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        {% if not users and not results %}
+            <p class="text-muted">Ничего не найдено по запросу «{{ q }}».</p>
+            <a href="{{ url_for('articles.new') }}" class="btn btn-primary" style="margin-top:12px">Создать статью</a>
+        {% endif %}
+    {% else %}
+        <p class="text-muted">Введите запрос в строку поиска.</p>
+    {% endif %}
+</div>
+{% endblock %}

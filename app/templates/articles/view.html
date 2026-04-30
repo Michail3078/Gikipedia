@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ article['title'] }} — Gikipedia{% endblock %}
+
+{% block content %}
+<article class="article-page">
+    <div class="article-header">
+        <h1>{{ article['title'] }}</h1>
+        <div class="article-meta">
+            <a href="{{ url_for('profile.view', username=article['username']) }}">{{ article['username'] }}</a>
+            · {{ article['created_at'][:10] }}
+            {% if article['updated_at'] != article['created_at'] %}
+                · обновлено {{ article['updated_at'][:10] }}
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="article-body">
+        {{ article['body'] | nl2br }}
+    </div>
+
+    {% if current_user %}
+        {% set can_edit = (current_user['id'] == article['author_id']) or (current_user['role'] in ('admin', 'moderator')) %}
+        <div class="article-actions">
+            {% if can_edit %}
+                <a href="{{ url_for('articles.edit', slug=article['slug']) }}" class="btn btn-ghost">Редактировать</a>
+                <form method="post" action="{{ url_for('articles.delete', slug=article['slug']) }}"
+                      onsubmit="return confirm('Удалить статью?')">
+                    <button type="submit" class="btn btn-danger">Удалить</button>
+                </form>
+            {% endif %}
+            {% if current_user['id'] != article['author_id'] %}
+                <button class="btn btn-ghost" onclick="this.closest('.article-actions').nextElementSibling.toggleAttribute('hidden')">Пожаловаться</button>
+            {% endif %}
+        </div>
+        {% if current_user['id'] != article['author_id'] %}
+        <div class="report-form" hidden>
+            <form method="post" action="{{ url_for('reports.report_article', article_id=article['id']) }}">
+                <textarea name="reason" placeholder="Опишите причину жалобы..." rows="3" required maxlength="200" class="report-textarea"></textarea>
+                <div class="report-counter"><span class="report-chars">0</span>/200</div>
+                <button type="submit" class="btn btn-danger">Отправить жалобу</button>
+            </form>
+        </div>
+        {% endif %}
+    {% endif %}
+</article>
+{% endblock %}

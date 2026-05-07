@@ -40,9 +40,13 @@ def new():
     error = None
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
         body  = request.form.get('body', '').strip()
+        tag = request.form.get('tag', '').strip()
+        cover_image = request.form.get('cover_image', '').strip()
+        
         if not title or not body:
-            error = 'Заполните все поля'
+            error = 'Заполните обязательные поля (название и содержание)'
         else:
             slug = slugify(title)
             db = get_db()
@@ -51,8 +55,8 @@ def new():
                 error = 'Статья с таким названием уже существует'
             else:
                 db.execute(
-                    "INSERT INTO articles (slug, title, body, author_id) VALUES (?,?,?,?)",
-                    (slug, title, body, session['user_id'])
+                    "INSERT INTO articles (slug, title, description, body, tag, cover_image, author_id) VALUES (?,?,?,?,?,?,?)",
+                    (slug, title, description, body, tag, cover_image, session['user_id'])
                 )
                 db.commit()
                 return redirect(url_for('articles.view', slug=slug))
@@ -75,13 +79,17 @@ def edit(slug):
     error = None
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
+        description = request.form.get('description', '').strip()
         body  = request.form.get('body', '').strip()
+        tag = request.form.get('tag', '').strip()
+        cover_image = request.form.get('cover_image', '').strip()
+        
         if not title or not body:
-            error = 'Заполните все поля'
+            error = 'Заполните обязательные поля (название и содержание)'
         else:
             db.execute(
-                "UPDATE articles SET title=?, body=?, updated_at=CURRENT_TIMESTAMP WHERE slug=?",
-                (title, body, slug)
+                "UPDATE articles SET title=?, description=?, body=?, tag=?, cover_image=?, last_editor_id=?, updated_at=CURRENT_TIMESTAMP WHERE slug=?",
+                (title, description, body, tag, cover_image, session['user_id'], slug)
             )
             db.commit()
             return redirect(url_for('articles.view', slug=slug))

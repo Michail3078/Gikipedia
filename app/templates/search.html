@@ -18,6 +18,11 @@
                     <div>
                         <span class="user-card-name">{{ u['username'] }}</span>
                         <span class="role-badge role-{{ u['role'] }}">{{ u['role'] }}</span>
+                        {% if u['friend_code'] %}
+                        <div class="friend-code-small">
+                            <code>{{ u['friend_code'] }}</code>
+                        </div>
+                        {% endif %}
                         {% if u['bio'] %}<p class="user-card-bio">{{ u['bio'][:80] }}</p>{% endif %}
                     </div>
                 </a>
@@ -33,7 +38,21 @@
                 {% for a in results %}
                 <a href="{{ url_for('articles.view', slug=a['slug']) }}" class="article-card">
                     <h3>{{ a['title'] }}</h3>
-                    <p class="article-excerpt">{{ a['body'][:150] }}{% if a['body']|length > 150 %}…{% endif %}</p>
+                    <p class="article-meta">
+                        {% if a['tag'] %}
+                            {% for t in a['tag'].split(',') %}
+                                {% set t = t.strip() %}
+                                {% if t %}
+                                <span class="article-tag">{{ t }}</span>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    </p>
+                    {% if a['description'] %}
+                        <p class="article-excerpt">{{ a['description'] }}</p>
+                    {% else %}
+                        <p class="article-excerpt">{{ a['body'][:150] }}{% if a['body']|length > 150 %}…{% endif %}</p>
+                    {% endif %}
                 </a>
                 {% endfor %}
             </div>

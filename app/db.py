@@ -32,6 +32,7 @@ def init_db():
             role      TEXT NOT NULL DEFAULT 'user',
             avatar    TEXT,
             bio       TEXT,
+            friend_code TEXT UNIQUE,  -- Уникальный код для поиска друзей
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
 
@@ -39,11 +40,24 @@ def init_db():
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
             slug       TEXT UNIQUE NOT NULL,
             title      TEXT NOT NULL,
+            description TEXT,  -- Краткое описание статьи
             body       TEXT NOT NULL,
+            tag        TEXT,   -- Тег/категория статьи
+            cover_image TEXT,  -- URL обложки статьи
             author_id  INTEGER REFERENCES users(id),
+            last_editor_id INTEGER REFERENCES users(id),  -- Кто последний редактировал
             rating     INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS article_ratings (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            article_id INTEGER REFERENCES articles(id) ON DELETE CASCADE,
+            user_id    INTEGER REFERENCES users(id),
+            rating     INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(article_id, user_id)
         );
 
         CREATE TABLE IF NOT EXISTS notifications (
@@ -88,6 +102,46 @@ def init_db():
     cols = [row[1] for row in db.execute("PRAGMA table_info(notifications)").fetchall()]
     if 'link' not in cols:
         db.execute("ALTER TABLE notifications ADD COLUMN link TEXT")
+    db.commit()
+
+    # Migration: add new columns to articles table if missing
+    cols = [row[1] for row in db.execute("PRAGMA table_info(articles)").fetchall()]
+    if 'description' not in cols:
+        db.execute("ALTER TABLE articles ADD COLUMN description TEXT")
+    if 'tag' not in cols:
+        db.execute("ALTER TABLE articles ADD COLUMN tag TEXT")
+    if 'cover_image' not in cols:
+        db.execute("ALTER TABLE articles ADD COLUMN cover_image TEXT")
+    if 'last_editor_id' not in cols:
+        db.execute("ALTER TABLE articles ADD COLUMN last_editor_id INTEGER REFERENCES users(id)")
+    db.commit()
+
+    # Migration: add friend_code to users table if missing
+    cols = [row[1] for row in db.execute("PRAGMA table_info(users)").fetchall()]
+    if 'friend_code' not in cols:
+        db.execute("ALTER TABLE users ADD COLUMN friend_code TEXT")
+        # Генерируем коды для существующих пользователей
+        import random
+        import string
+        users = db.execute("SELECT id FROM users").fetchall()
+        for user in users:
+            code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            db.execute("UPDATE users SET friend_code=? WHERE id=?", (code, user['id']))
+        # После заполнения добавляем UNIQUE constraint
+        db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_friend_code ON users(friend_code) WHERE friend_code IS NOT NULL")
+    db.commit()
+
+    # Создаем таблицу оценок если её нет
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS article_ratings (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            article_id INTEGER REFERENCES articles(id) ON DELETE CASCADE,
+            user_id    INTEGER REFERENCES users(id),
+            rating     INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(article_id, user_id)
+        )
+    """)
     db.commit()
 
     # Seed test users

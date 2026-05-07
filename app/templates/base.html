@@ -8,6 +8,16 @@
 </head>
 <body>
 
+<div class="top-rated-carousel">
+    <div class="carousel-inner">
+        <div class="carousel-track">
+            <!-- Популярные статьи будут загружены через JavaScript -->
+        </div>
+    </div>
+    <button class="carousel-btn carousel-prev" aria-label="Предыдущая статья">‹</button>
+    <button class="carousel-btn carousel-next" aria-label="Следующая статья">›</button>
+</div>
+
 <header class="site-header">
     <div class="header-inner">
 
@@ -28,6 +38,12 @@
         </form>
 
         <nav class="header-actions" aria-label="Действия пользователя">
+
+            {% if current_user %}
+            <a href="{{ url_for('articles.new') }}" class="btn btn-primary btn-create-article" aria-label="Создать статью" title="Создать статью">
+                + Создать статью
+            </a>
+            {% endif %}
 
             <a href="{{ url_for('chat.index') }}" class="icon-btn" aria-label="Чат" title="Чат">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
@@ -73,8 +89,7 @@
                 {% endif %}
                 <a href="{{ url_for('profile.view', username=current_user['username']) }}" class="user-avatar" aria-label="Профиль">
                     <img src="{{ current_user['avatar'] or url_for('static', filename='img/default-avatar.svg') }}"
-                         alt="{{ current_user['username'] }}"
-                         onerror="this.src='https://ui-avatars.com/api/?name={{ current_user['username'] }}&background=7c5cfc&color=fff'">
+                         alt="{{ current_user['username'] }}">
                 </a>
                 <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost">Выйти</a>
             {% else %}
@@ -113,5 +128,98 @@
 </footer>
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+<script>
+// Карусель популярных статей
+document.addEventListener('DOMContentLoaded', function() {
+    const carousel = document.querySelector('.top-rated-carousel');
+    if (!carousel) return;
+    
+    const track = carousel.querySelector('.carousel-track');
+    const prevBtn = carousel.querySelector('.carousel-prev');
+    const nextBtn = carousel.querySelector('.carousel-next');
+    
+    let currentPosition = 0;
+    const itemWidth = 300; // Ширина одного элемента
+    const gap = 20; // Отступ между элементами
+    
+    // Загружаем популярные статьи
+    fetch('/api/top-rated')
+        .then(res => res.json())
+        .then(articles => {
+            if (articles.length === 0) {
+                carousel.style.display = 'none';
+                return;
+            }
+            
+            // Создаем элементы карусели
+            articles.forEach(article => {
+                const item = document.createElement('div');
+                item.className = 'carousel-item';
+                item.innerHTML = `
+                    <a href="/wiki/${article.slug}">
+                        <h3>${article.title}</h3>
+                        <div class="carousel-rating">
+                            <svg viewBox="0 0 24 24">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                            <span>${article.rating.toFixed(1)}</span>
+                            <span>· ${article.username}</span>
+                        </div>
+                    </a>
+                `;
+                track.appendChild(item);
+            });
+            
+            // Функция для обновления позиции
+            function updatePosition() {
+                track.style.transform = `translateX(-${currentPosition}px)`;
+            }
+            
+            // Обработчики кнопок
+            prevBtn.addEventListener('click', function() {
+                const maxPosition = Math.max(0, (articles.length * (itemWidth + gap)) - carousel.offsetWidth);
+                currentPosition = Math.max(0, currentPosition - (itemWidth + gap));
+                updatePosition();
+            });
+            
+            nextBtn.addEventListener('click', function() {
+                const maxPosition = Math.max(0, (articles.length * (itemWidth + gap)) - carousel.offsetWidth);
+                currentPosition = Math.min(maxPosition, currentPosition + (itemWidth + gap));
+                updatePosition();
+            });
+            
+            // Автопрокрутка каждые 5 секунд
+            let autoScroll = setInterval(() => {
+                const maxPosition = Math.max(0, (articles.length * (itemWidth + gap)) - carousel.offsetWidth);
+                if (currentPosition >= maxPosition) {
+                    currentPosition = 0;
+                } else {
+                    currentPosition += (itemWidth + gap);
+                }
+                updatePosition();
+            }, 5000);
+            
+            // Останавливаем автопрокрутку при наведении
+            carousel.addEventListener('mouseenter', () => clearInterval(autoScroll));
+            carousel.addEventListener('mouseleave', () => {
+                autoScroll = setInterval(() => {
+                    const maxPosition = Math.max(0, (articles.length * (itemWidth + gap)) - carousel.offsetWidth);
+                    if (currentPosition >= maxPosition) {
+                        currentPosition = 0;
+                    } else {
+                        currentPosition += (itemWidth + gap);
+                    }
+                    updatePosition();
+                }, 5000);
+            });
+        })
+        .catch(err => {
+            console.error('Ошибка загрузки популярных статей:', err);
+            carousel.style.display = 'none';
+        });
+});
+</script>
+
 </body>
 </html>

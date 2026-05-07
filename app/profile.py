@@ -39,7 +39,11 @@ def settings():
     success = None
     if request.method == 'POST':
         bio = request.form.get('bio', '').strip()
-        db.execute("UPDATE users SET bio=? WHERE id=?", (bio, session['user_id']))
+        avatar = request.form.get('avatar', '').strip()
+        db.execute(
+            "UPDATE users SET bio=?, avatar=? WHERE id=?",
+            (bio, avatar or None, session['user_id'])
+        )
         db.commit()
         success = 'Профиль обновлён'
     return render_template('profile/settings.html', user=user, error=error, success=success)

@@ -13,8 +13,21 @@
         {% for a in articles %}
         <a href="{{ url_for('articles.view', slug=a['slug']) }}" class="article-card">
             <h3>{{ a['title'] }}</h3>
-            <p class="article-meta">{{ a['username'] }} · {{ a['created_at'][:10] }}</p>
-            <p class="article-excerpt">{{ a['body'][:150] }}{% if a['body']|length > 150 %}…{% endif %}</p>
+            <p class="article-meta">{{ a['username'] }} · {{ a['created_at'][:10] }}
+                {% if a['tag'] %}
+                    {% for t in a['tag'].split(',') %}
+                        {% set t = t.strip() %}
+                        {% if t %}
+                        · <a href="{{ url_for('main.search') }}?q={{ t }}" class="article-tag">{{ t }}</a>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </p>
+            {% if a['description'] %}
+                <p class="article-excerpt">{{ a['description'] }}</p>
+            {% else %}
+                <p class="article-excerpt">{{ a['body'][:150] }}{% if a['body']|length > 150 %}…{% endif %}</p>
+            {% endif %}
         </a>
         {% endfor %}
     </div>

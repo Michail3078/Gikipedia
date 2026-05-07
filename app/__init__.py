@@ -22,6 +22,7 @@ def create_app():
     from app.chat          import chat_bp
     from app.friends       import friends_bp
     from app.reports       import reports_bp
+    from app.ratings       import ratings
 
     app.register_blueprint(main)
     app.register_blueprint(auth)
@@ -32,6 +33,7 @@ def create_app():
     app.register_blueprint(chat_bp)
     app.register_blueprint(friends_bp)
     app.register_blueprint(reports_bp)
+    app.register_blueprint(ratings)
 
     # API: notification count (used by JS)
     from app.notifications import count as notif_count

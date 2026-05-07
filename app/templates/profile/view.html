@@ -4,13 +4,34 @@
 {% block content %}
 <div class="profile-page">
     <div class="profile-header">
-        <img class="profile-avatar"
-             src="{{ profile_user['avatar'] or '' }}"
-             alt="{{ profile_user['username'] }}"
-             onerror="this.src='https://ui-avatars.com/api/?name={{ profile_user['username'] }}&background=7c5cfc&color=fff&size=96'">
+        <div class="profile-avatar-wrap">
+            <img class="profile-avatar"
+                 src="{{ profile_user['avatar'] or 'https://ui-avatars.com/api/?name=' + profile_user['username'] + '&background=7c5cfc&color=fff&size=96' }}"
+                 alt="{{ profile_user['username'] }}">
+            {% if current_user and current_user['id'] == profile_user['id'] %}
+            <a href="{{ url_for('profile.settings') }}" class="avatar-edit-btn" title="Изменить аватарку">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+            </a>
+            {% endif %}
+        </div>
         <div class="profile-info">
             <h1>{{ profile_user['username'] }}</h1>
             <span class="role-badge role-{{ profile_user['role'] }}">{{ profile_user['role'] }}</span>
+            {% if profile_user['friend_code'] %}
+            <div class="friend-code">
+                <strong>Код дружбы:</strong> 
+                <code class="code-display">{{ profile_user['friend_code'] }}</code>
+                <button class="btn-copy-code" data-code="{{ profile_user['friend_code'] }}" title="Скопировать код">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                </button>
+            </div>
+            {% endif %}
             {% if profile_user['bio'] %}<p class="profile-bio">{{ profile_user['bio'] }}</p>{% endif %}
         </div>
 
@@ -70,4 +91,25 @@
     <p class="text-muted">Статей пока нет.</p>
     {% endif %}
 </div>
+
+<script>
+// Копирование кода дружбы
+document.querySelectorAll('.btn-copy-code').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const code = this.getAttribute('data-code');
+        navigator.clipboard.writeText(code).then(() => {
+            const originalHTML = this.innerHTML;
+            this.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 6L9 17l-5-5"/></svg>';
+            this.classList.add('copied');
+            setTimeout(() => {
+                this.innerHTML = originalHTML;
+                this.classList.remove('copied');
+            }, 2000);
+        }).catch(err => {
+            console.error('Ошибка копирования:', err);
+            alert('Не удалось скопировать код');
+        });
+    });
+});
+</script>
 {% endblock %}

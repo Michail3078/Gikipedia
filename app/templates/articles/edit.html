@@ -7,11 +7,37 @@
     {% if error %}<p class="flash flash-error">{{ error }}</p>{% endif %}
 
     <form method="post" class="article-form">
-        <label for="title">Название</label>
+        <label for="title">Название*</label>
         <input id="title" type="text" name="title" required
                value="{{ article['title'] if article else '' }}" placeholder="Название игры или темы">
 
-        <label for="body">Содержание</label>
+        <label for="description">Краткое описание</label>
+        <textarea id="description" name="description" rows="3"
+                  placeholder="Краткое описание статьи (будет отображаться в списке статей)...">{{ article['description'] if article else '' }}</textarea>
+
+        <label for="tag">Теги</label>
+        <div class="tags-input-wrap">
+            <div class="tags-list" id="tags-list">
+                {% if article and article['tag'] %}
+                    {% for t in article['tag'].split(',') %}
+                        {% set t = t.strip() %}
+                        {% if t %}
+                        <span class="tag-chip">{{ t }}<button type="button" class="tag-remove" aria-label="Удалить тег">×</button></span>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <input id="tag-input" type="text" placeholder="Введите тег и нажмите Enter или запятую" autocomplete="off">
+        </div>
+        <input type="hidden" name="tag" id="tag-hidden" value="{{ article['tag'] if article and article['tag'] else '' }}">
+        <small class="form-hint">Нажмите Enter или запятую чтобы добавить тег</small>
+
+        <label for="cover_image">URL обложки</label>
+        <input id="cover_image" type="text" name="cover_image"
+               value="{{ article['cover_image'] if article else '' }}" placeholder="https://example.com/image.jpg">
+        <small class="form-hint">Ссылка на изображение для обложки статьи</small>
+
+        <label for="body">Содержание*</label>
         <textarea id="body" name="body" rows="16" required
                   placeholder="Расскажите об игре...">{{ article['body'] if article else '' }}</textarea>
 
@@ -21,4 +47,59 @@
         </div>
     </form>
 </div>
+
+<script>
+(function() {
+    const list = document.getElementById('tags-list');
+    const input = document.getElementById('tag-input');
+    const hidden = document.getElementById('tag-hidden');
+
+    function getTags() {
+        return [...list.querySelectorAll('.tag-chip')].map(c => c.firstChild.textContent.trim()).filter(Boolean);
+    }
+
+    function syncHidden() {
+        hidden.value = getTags().join(', ');
+    }
+
+    function addTag(val) {
+        val = val.trim().replace(/,/g, '');
+        if (!val) return;
+        if (getTags().includes(val)) return;
+        const chip = document.createElement('span');
+        chip.className = 'tag-chip';
+        chip.appendChild(document.createTextNode(val));
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'tag-remove';
+        btn.setAttribute('aria-label', 'Удалить тег');
+        btn.textContent = '×';
+        btn.onclick = () => { chip.remove(); syncHidden(); };
+        chip.appendChild(btn);
+        list.appendChild(chip);
+        syncHidden();
+    }
+
+    // Удаление существующих чипов
+    list.querySelectorAll('.tag-remove').forEach(btn => {
+        btn.onclick = () => { btn.parentElement.remove(); syncHidden(); };
+    });
+
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); addTag(input.value); input.value = ''; }
+        if (e.key === ',')     { e.preventDefault(); addTag(input.value); input.value = ''; }
+        if (e.key === 'Backspace' && !input.value) {
+            const chips = list.querySelectorAll('.tag-chip');
+            if (chips.length) { chips[chips.length - 1].remove(); syncHidden(); }
+        }
+    });
+
+    input.addEventListener('input', e => {
+        if (input.value.includes(',')) {
+            input.value.split(',').forEach(v => addTag(v));
+            input.value = '';
+        }
+    });
+})();
+</script>
 {% endblock %}

@@ -8,6 +8,21 @@
     {% if success %}<p class="flash flash-success">{{ success }}</p>{% endif %}
 
     <form method="post" class="auth-form">
+        <div class="avatar-preview-wrap">
+            <img id="avatar-preview"
+                 src="{{ user['avatar'] or '' }}"
+                 alt="{{ user['username'] }}"
+                 class="profile-avatar"
+                 onerror="this.src='https://ui-avatars.com/api/?name={{ user['username'] }}&background=7c5cfc&color=fff&size=96'">
+        </div>
+
+        <label for="avatar">URL аватарки</label>
+        <input id="avatar" type="url" name="avatar"
+               value="{{ user['avatar'] or '' }}"
+               placeholder="https://example.com/avatar.jpg"
+               oninput="document.getElementById('avatar-preview').src=this.value||'https://ui-avatars.com/api/?name={{ user['username'] }}&background=7c5cfc&color=fff&size=96'">
+        <small class="form-hint">Вставьте ссылку на изображение</small>
+
         <label for="bio">О себе</label>
         <textarea id="bio" name="bio" rows="4" placeholder="Расскажите о себе...">{{ user['bio'] or '' }}</textarea>
 

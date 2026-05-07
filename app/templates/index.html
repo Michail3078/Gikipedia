@@ -18,8 +18,16 @@
         {% for a in recent %}
         <a href="{{ url_for('articles.view', slug=a['slug']) }}" class="article-card">
             <h3>{{ a['title'] }}</h3>
-            <p class="article-meta">{{ a['username'] }} · {{ a['created_at'][:10] }}</p>
-            <p class="article-excerpt">{{ a['body'][:120] }}{% if a['body']|length > 120 %}…{% endif %}</p>
+            <p class="article-meta">{{ a['username'] }} · {{ a['created_at'][:10] }}
+                {% if a['tag'] %}
+                    · <span class="article-tag">{{ a['tag'] }}</span>
+                {% endif %}
+            </p>
+            {% if a['description'] %}
+                <p class="article-excerpt">{{ a['description'] }}</p>
+            {% else %}
+                <p class="article-excerpt">{{ a['body'][:120] }}{% if a['body']|length > 120 %}…{% endif %}</p>
+            {% endif %}
         </a>
         {% endfor %}
     </div>

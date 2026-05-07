@@ -4,13 +4,50 @@
 {% block content %}
 <article class="article-page">
     <div class="article-header">
+        {% if article['cover_image'] %}
+        <div class="article-cover">
+            <img src="{{ article['cover_image'] }}" alt="Обложка статьи: {{ article['title'] }}" class="cover-image">
+        </div>
+        {% endif %}
+        
         <h1>{{ article['title'] }}</h1>
+        
+        {% if article['description'] %}
+        <div class="article-description">
+            {{ article['description'] }}
+        </div>
+        {% endif %}
+        
         <div class="article-meta">
             <a href="{{ url_for('profile.view', username=article['username']) }}">{{ article['username'] }}</a>
             · {{ article['created_at'][:10] }}
+            {% if article['tag'] %}
+                {% for t in article['tag'].split(',') %}
+                    {% set t = t.strip() %}
+                    {% if t %}
+                    · <a href="{{ url_for('main.search') }}?q={{ t }}" class="article-tag">{{ t }}</a>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
             {% if article['updated_at'] != article['created_at'] %}
                 · обновлено {{ article['updated_at'][:10] }}
             {% endif %}
+        </div>
+        
+        <div class="article-rating" data-article-id="{{ article['id'] }}">
+            <div class="rating-stars">
+                {% for i in range(1, 6) %}
+                <button class="star-btn" data-rating="{{ i }}" aria-label="Оценить {{ i }} звезд">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                </button>
+                {% endfor %}
+            </div>
+            <div class="rating-info">
+                <span class="rating-value">{{ "%.1f"|format(article['rating']) if article['rating'] else '0.0' }}</span>
+                <span class="rating-count">(0 оценок)</span>
+            </div>
         </div>
     </div>
 
@@ -43,4 +80,124 @@
         {% endif %}
     {% endif %}
 </article>
+
+<script>
+// Копирование кода дружбы
+document.querySelectorAll('.btn-copy-code').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const code = this.getAttribute('data-code');
+        navigator.clipboard.writeText(code).then(() => {
+            const originalHTML = this.innerHTML;
+            this.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M20 6L9 17l-5-5"/></svg>';
+            this.classList.add('copied');
+            setTimeout(() => {
+                this.innerHTML = originalHTML;
+                this.classList.remove('copied');
+            }, 2000);
+        }).catch(err => {
+            console.error('Ошибка копирования:', err);
+            alert('Не удалось скопировать код');
+        });
+    });
+});
+
+// Система оценок
+document.addEventListener('DOMContentLoaded', function() {
+    const ratingEl = document.querySelector('.article-rating');
+    if (!ratingEl) return;
+    
+    const articleId = ratingEl.getAttribute('data-article-id');
+    const stars = ratingEl.querySelectorAll('.star-btn');
+    const ratingValue = ratingEl.querySelector('.rating-value');
+    const ratingCount = ratingEl.querySelector('.rating-count');
+    
+    // Загружаем текущий рейтинг
+    fetch(`/api/article/${articleId}/rating`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.article_rating) {
+                ratingValue.textContent = data.article_rating.toFixed(1);
+            }
+            if (data.rating_count) {
+                ratingCount.textContent = `(${data.rating_count} оценок)`;
+            }
+            if (data.user_rating) {
+                // Подсвечиваем звезды по оценке пользователя
+                stars.forEach((star, index) => {
+                    if (index < data.user_rating) {
+                        star.classList.add('active');
+                        star.querySelector('svg').style.fill = '#ffc107';
+                    }
+                });
+            }
+        });
+    
+    // Обработка кликов по звездам
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = this.getAttribute('data-rating');
+            
+            // Отправляем оценку на сервер
+            const formData = new FormData();
+            formData.append('rating', rating);
+            
+            fetch(`/api/article/${articleId}/rate`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Обновляем отображение
+                    ratingValue.textContent = data.article_rating.toFixed(1);
+                    
+                    // Подсвечиваем звезды
+                    stars.forEach((s, index) => {
+                        if (index < rating) {
+                            s.classList.add('active');
+                            s.querySelector('svg').style.fill = '#ffc107';
+                        } else {
+                            s.classList.remove('active');
+                            s.querySelector('svg').style.fill = 'none';
+                        }
+                    });
+                    
+                    // Обновляем количество оценок
+                    fetch(`/api/article/${articleId}/rating`)
+                        .then(res => res.json())
+                        .then(ratingData => {
+                            if (ratingData.rating_count) {
+                                ratingCount.textContent = `(${ratingData.rating_count} оценок)`;
+                            }
+                        });
+                } else {
+                    alert(data.error || 'Ошибка при оценке');
+                }
+            })
+            .catch(err => {
+                console.error('Ошибка:', err);
+                alert('Не удалось поставить оценку');
+            });
+        });
+        
+        // Эффект при наведении
+        star.addEventListener('mouseenter', function() {
+            const rating = parseInt(this.getAttribute('data-rating'));
+            stars.forEach((s, index) => {
+                if (index < rating) {
+                    s.style.color = '#ffc107';
+                }
+            });
+        });
+        
+        star.addEventListener('mouseleave', function() {
+            stars.forEach(s => {
+                if (!s.classList.contains('active')) {
+                    s.style.color = '';
+                }
+            });
+        });
+    });
+});
+</script>
 {% endblock %}

@@ -76,9 +76,18 @@ def register():
             if existing:
                 error = 'Имя пользователя занято'
             else:
+                import random
+                import string
+                # Генерируем уникальный код дружбы
+                while True:
+                    friend_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+                    existing_code = db.execute("SELECT id FROM users WHERE friend_code=?", (friend_code,)).fetchone()
+                    if not existing_code:
+                        break
+                
                 db.execute(
-                    "INSERT INTO users (username, password) VALUES (?,?)",
-                    (username, hash_pw(password))
+                    "INSERT INTO users (username, password, friend_code) VALUES (?,?,?)",
+                    (username, hash_pw(password), friend_code)
                 )
                 db.commit()
                 user = db.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
